@@ -1,0 +1,51 @@
+h1{
+    font-size: 1.25rem;
+    font-weight: 500;
+    letter-spacing: 1px;
+    text-align: center;
+    margin: 0.5rem 0;
+}
+
+.singupspan{
+    font-size: 0.85rem;
+}
+.singupspan a{
+    text-decoration: none;
+}
+
+.singupspan span{
+    margin-left: 0.5rem;
+    font-weight: 500;
+    text-transform: capitalize;
+    cursor: pointer;
+    font-size: 15px
+}
+
+.singupspan span:hover{
+    text-decoration: underline;
+}
+
+.input{
+    width: 80%;
+    padding: 1rem;
+    margin:1rem;
+    border: none;
+    border-radius: 4px;
+    font-size: 1rem;
+    outline: none;
+    background-color: #f6f7fbff;
+    color: #3aa589ff;
+}
+
+.input:focus{
+    outline: 1px solid #3aa589ff ;
+}
+
+.button{
+    width: 80%;
+    padding: 0.8rem !important;
+    font-size: 1rem;
+    letter-spacing: 1px;
+    border: 2px solid #4e416cff;
+    box-shadow: 1px 1px 4px #3aa589ff;
+}

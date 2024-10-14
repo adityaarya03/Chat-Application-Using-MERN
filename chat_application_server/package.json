@@ -1,0 +1,26 @@
+{
+  "name": "chat_application_server",
+  "version": "1.0.0",
+  "description": "chat application where users can interact and chat with each other using mern stack and web socket technology",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "dev": "nodemon index.js"
+  },
+  "author": "Harsh Garg",
+  "license": "ISC",
+  "dependencies": {
+    "bcrypt": "^5.1.1",
+    "cors": "^2.8.5",
+    "dotenv": "^16.3.1",
+    "express": "^4.18.2",
+    "express-async-handler": "^1.2.0",
+    "jsonwebtoken": "^9.0.2",
+    "mongodb": "^6.3.0",
+    "mongoose": "^8.0.3",
+    "nodemailer": "^6.9.9",
+    "nodemon": "^3.0.2",
+    "otp-generator": "^4.0.1",
+    "socket.io": "^4.7.4"
+  }
+}

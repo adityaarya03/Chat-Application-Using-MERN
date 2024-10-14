@@ -1,0 +1,119 @@
+.chatArea-container{
+    margin-left: 10px;
+    margin-top: 10px;
+    display: flex;
+    flex: 3;
+    flex-direction: column;
+}
+
+.chatArea-header{
+    border-top-right-radius: 26px;
+    border-top-left-radius: 26px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background-color: #E1E1E1;
+    padding: 10px 10px;
+}
+
+.header-text{
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    flex: 1;
+}
+
+.con-icon{
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background-color: #d9d9d9;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    font-size: 2rem;
+    font-weight: bolder;
+    color: white;
+    height: 32px;
+    width: 32px;
+    padding: 2px;
+    border-radius: 50%;
+}
+
+.con-title{
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    font-weight: bold;
+    color: rgba(0, 0, 0, 0.54);
+}
+.con-timestamp{
+    justify-content: flex-end;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    font-size: 0.75rem;
+    color: rgba(0, 0, 0, 0.54);
+}
+
+
+.messages-container {
+    background-size: contain;
+    position: relative;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow-y: scroll;
+    scrollbar-width: none;
+    z-index: 1;
+}
+
+.msg-cont-back{
+    background-image: url('../../assests/doodle.jpg');
+    width: 75%;
+    height: 90%;
+    opacity: 0.2;
+    z-index: -1;
+    width: -webkit-fill-available;
+    position: fixed;
+    pointer-events: none;
+    background-size: contain;
+}
+
+/* .messages-container::before {
+    filter: blur(0.5px);
+    content: "";
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    background-image: url('../../assests/doodle.jpg');
+    background-attachment: fixed;
+    background-size: contain;
+    opacity: 0.2;
+    pointer-events: none;
+    z-index: -1;
+} */
+
+.messages-container::-webkit-scrollbar{
+    display: none;
+}
+
+.text-input-area{
+    z-index: 1;
+    display: flex;
+    padding: 10px 10px;
+    margin: 2px 4px;
+    background-color: #f6f7fbff;
+    border-radius: 25px;
+}
+.text-input-area input{
+    background-color: #f6f7fbff;
+}
+.search-box{ 
+    flex: 1;
+    outline-width: 0;
+    border: none;
+    margin-left: 10px;
+    font-size: 1.25rem;
+    color: rgba(0, 0, 0, 0.54);
+}
+
+.darkerdoodle{
+    filter: invert(1);
+}

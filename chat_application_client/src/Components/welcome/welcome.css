@@ -1,0 +1,35 @@
+.welcome-logo{
+    height: 25vw;
+    filter:drop-shadow(2px 4px 6px black);
+}
+
+.welcome-container{
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 20px;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    color: rgba(0, 0, 0, 0.54);
+    flex: 3;
+    border-bottom: 5px solid #e8505b;
+    /* border-radius: 15px; */
+    filter: drop-shadow(3px 3px 2px black);
+    margin-top: 11px;
+    margin-left: 10px;
+    background: #F5F5F5;
+    border-top-left-radius: 24px;
+}
+.welcome-container :nth-child(2){
+    font-size: 1.2em;
+    font-weight: 600;
+    color: #455A64;
+}
+.welcome-container :last-child{
+    font-size: 0.8em;
+    font-weight: 500;
+    color: #455A64;
+}
+.borderdarkwe{
+    border: 1px solid #2C3333;
+}

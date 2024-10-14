@@ -1,0 +1,24 @@
+.navbar-header{
+    /* background-color:  #ffffff; */
+    background-color:#f6f7fb ;
+    display: flex;
+    justify-content: space-between;
+    padding: 20px 20px;
+}
+
+.navbar-logo{
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.logo img{
+    width: 50px;
+    margin-right: 10px;
+}
+
+.text-logo{
+    font-size: 20px;
+    font-weight: 500;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
