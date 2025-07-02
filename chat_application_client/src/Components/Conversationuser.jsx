@@ -37,6 +37,15 @@ const Conversationuser = () => {
           if (conversation.users.length === 1 && conversation.isGroupChat===false) {
             return <div key={index}></div>;
           }
+          // Helper to get the other user object
+          const getOtherUser = () => {
+            if (conversation.users[0].user._id === userData.data._id) {
+              return conversation.users[1].user;
+            } else {
+              return conversation.users[0].user;
+            }
+          };
+          const otherUser = !conversation.isGroupChat ? getOtherUser() : null;
           if (conversation.latestMessage === undefined) {
             return (
               <div
@@ -52,20 +61,15 @@ const Conversationuser = () => {
                     "conversation-container " + (lighttheme ? "" : "dark")
                   }
                   onClick={() => {
-                    // selectedChat = conversation._id
                     setChatcontext(conversation);
                     navigate(
                       `chat/${conversation._id}&${
                         conversation.isGroupChat === false
-                          ? conversation.users[0]._id === userData.data._id
-                            ? conversation.users[1].name
-                            : conversation.users[0].name
+                          ? otherUser.name
                           : conversation.chatName
                       }&${conversation.isGroupChat}&${
                         conversation.isGroupChat === false
-                          ? conversation.users[0]._id === userData.data._id
-                            ? conversation.users[1].avatarImage
-                            : conversation.users[0].avatarImage
+                          ? otherUser.avatarImage
                           : conversation.avatarImage
                       }`
                     );
@@ -75,9 +79,7 @@ const Conversationuser = () => {
                     <img
                       src={`data:image/svg+xml;base64,${
                         conversation.isGroupChat === false
-                          ? conversation.users[0]._id === userData.data._id
-                            ? conversation.users[1].avatarImage
-                            : conversation.users[0].avatarImage
+                          ? otherUser.avatarImage
                           : conversation.avatarImage
                       }`}
                       alt="user avatar"
@@ -85,9 +87,7 @@ const Conversationuser = () => {
                   </div>
                   <p className={"con-title " + (lighttheme ? "" : "dark")}>
                     {conversation.isGroupChat === false
-                      ? conversation.users[0]._id === userData.data._id
-                        ? conversation.users[1].name
-                        : conversation.users[0].name
+                      ? otherUser.name
                       : conversation.chatName}
                   </p>
                   <p className="con-lastMessage">
@@ -102,19 +102,14 @@ const Conversationuser = () => {
                 key={index}
                 className="conversation-container"
                 onClick={() => {
-                 
                   navigate(
                     `chat/${conversation._id}&${
                       conversation.isGroupChat === false
-                        ? conversation.users[0]._id === userData.data._id
-                          ? conversation.users[1].name
-                          : conversation.users[0].name
+                        ? otherUser.name
                         : conversation.chatName
                     }&${conversation.isGroupChat}&${
                       conversation.isGroupChat === false
-                        ? conversation.users[0]._id === userData.data._id
-                          ? conversation.users[1].avatarImage
-                          : conversation.users[0].avatarImage
+                        ? otherUser.avatarImage
                         : conversation.avatarImage
                     }`
                   );
@@ -127,9 +122,7 @@ const Conversationuser = () => {
                   <img
                     src={`data:image/svg+xml;base64,${
                       conversation.isGroupChat === false
-                        ? conversation.users[0]._id === userData.data._id
-                          ? conversation.users[1].avatarImage
-                          : conversation.users[0].avatarImage
+                        ? otherUser.avatarImage
                         : conversation.avatarImage
                     }`}
                     alt="user avatar"
@@ -137,9 +130,7 @@ const Conversationuser = () => {
                 </div>
                 <p className={"con-title " + (lighttheme ? "" : "dark")}>
                   {conversation.isGroupChat === false
-                    ? conversation.users[0]._id === userData.data._id
-                      ? conversation.users[1].name
-                      : conversation.users[0].name
+                    ? otherUser.name
                     : conversation.chatName}
                 </p>
                 <p className="con-lastMessage">

@@ -202,6 +202,38 @@ const ChatArea = () => {
     }, timerLength);
   }
 
+  // Socket.io: Listen for group membership changes (removed)
+  useEffect(() => {
+    if (!userData) return;
+    if (!socket) {
+      socket = io(ENDPOINT);
+      socket.emit("setup", userData);
+    }
+    const handleGroupMembershipChanged = (data) => {
+      if (data.action === 'removed' && data.groupId === chat_id) {
+        toast.info("You have been removed from this group.");
+        navigate("/app/welcome");
+      }
+    };
+    socket.on("group-membership-changed", handleGroupMembershipChanged);
+    return () => {
+      socket.off("group-membership-changed", handleGroupMembershipChanged);
+    };
+  }, [userData, chat_id, navigate]);
+
+  // Determine display name and avatar for direct chats
+  let displayName = chat_user;
+  let displayAvatar = avatarImage;
+  if (chatcontext && isGroupChat === "false" && chatcontext.users) {
+    const other = chatcontext.users.find(
+      (u) => u.user && u.user._id !== userData.data._id
+    );
+    if (other && other.user) {
+      displayName = other.user.name;
+      displayAvatar = other.user.avatarImage;
+    }
+  }
+
   if (!loaded) {
     return (
       <div
@@ -241,13 +273,13 @@ const ChatArea = () => {
         <div className={"chatArea-header " + (lighttheme ? "" : "darker")}>
           <div className="avatar-box ">
             <img
-              src={`data:image/svg+xml;base64,${avatarImage}`}
+              src={`data:image/svg+xml;base64,${displayAvatar}`}
               alt="user avatar"
             />
           </div>
           <div className={"header-text " + (lighttheme ? "" : "darker")}>
             <p className={"con-title " + (lighttheme ? "" : "darker")}>
-              {chat_user}
+              {displayName}
             </p>
             {/* <p className="con-timestamp">{props.timestamp}</p> */}
           </div>
@@ -284,7 +316,7 @@ const ChatArea = () => {
           <div style={{display:"flex" , padding:"0px 10px"}}>
             <div className="message-other-icon">
               <img
-                src={`data:image/svg+xml;base64,${avatarImage}`}
+                src={`data:image/svg+xml;base64,${displayAvatar}`}
                 alt=""
                 width={"40px"}
                 height={"40px"}

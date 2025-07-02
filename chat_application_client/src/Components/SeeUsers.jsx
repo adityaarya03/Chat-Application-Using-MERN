@@ -83,7 +83,7 @@ const SeeUsers = ({ handleOpen, handleClose, open, name }) => {
   };
 
   const handleLeave = async (userRemove) => {
-    if (chatcontext.groupAdmin._id !== userData.data._id) {
+    if (userRemove._id !== userData.data._id && chatcontext.groupAdmin._id !== userData.data._id) {
       toast("Only admins can remove users!", {
         position: "bottom-left",
         autoClose: 5000,
@@ -132,7 +132,7 @@ const SeeUsers = ({ handleOpen, handleClose, open, name }) => {
   };
 
   const handleAddUser = async (userToAdd) => {
-    if (chatcontext.users.find((exs) => exs._id === userToAdd._id)) {
+    if (chatcontext.users.find((exs) => exs.user._id === userToAdd._id)) {
       toast("user is already on the group!", {
         position: "bottom-left",
         autoClose: 5000,
@@ -250,9 +250,11 @@ const SeeUsers = ({ handleOpen, handleClose, open, name }) => {
               GroupName : {name}
             </Typography>
             <div className="users-add">
-              {chatcontext.users.map((user, index) => {
+              {chatcontext && chatcontext.users && chatcontext.users.map((userObj, index) => {
+                const member = userObj.user;
                 return (
                   <div
+                    key={member._id}
                     style={{
                       display: "flex",
                       justifyContent: "center",
@@ -262,10 +264,9 @@ const SeeUsers = ({ handleOpen, handleClose, open, name }) => {
                   >
                     <Stack direction="row" spacing={1}>
                       <Chip
-                        label={user.name}
+                        label={member.name}
                         onDelete={() => {
-                          setUserRemove(user);
-                          console.log(userRemove);
+                          setUserRemove(member);
                           handleClickOpendia();
                         }}
                       />

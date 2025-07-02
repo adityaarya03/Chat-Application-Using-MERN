@@ -8,8 +8,15 @@ const chatModel = mongoose.Schema({
         type:Boolean
     },
     users:[{
-        type:mongoose.Schema.Types.ObjectId,
-        ref:"User",
+        user: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "User",
+            required: true
+        },
+        joinedAt: {
+            type: Date,
+            required: true
+        }
     }],
     latestMessage:{
         type:mongoose.Schema.Types.ObjectId,
@@ -23,6 +30,11 @@ const chatModel = mongoose.Schema({
         type: String,
         default: ''
     },
+    pendingRequests: [{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User",
+        default: []
+    }],
 },{
     timestamps:true
 })

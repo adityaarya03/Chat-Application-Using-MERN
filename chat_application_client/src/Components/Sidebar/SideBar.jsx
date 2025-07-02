@@ -20,7 +20,11 @@ import MenuItem from "@mui/material/MenuItem";
 import Badge from "@mui/material/Badge";
 import NotificationsActiveIcon from "@mui/icons-material/NotificationsActive";
 import ChatIcon from '@mui/icons-material/Chat';
+import io from "socket.io-client";
 // import Conversationuser from "../Conversationuser";
+
+const ENDPOINT = process.env.REACT_APP_DEPLOYMENT_URL;
+let socket;
 
 const SideBar = () => {
   const navigate = useNavigate();
@@ -72,6 +76,22 @@ const SideBar = () => {
         setConversation(response.data);
       });
   }, [refresh, searchquerry]);
+
+  // Socket.io: Listen for group membership changes
+  useEffect(() => {
+    if (!userData) return;
+    if (!socket) {
+      socket = io(ENDPOINT);
+      socket.emit("setup", userData);
+    }
+    const handleGroupMembershipChanged = () => {
+      setRefresh((prev) => !prev);
+    };
+    socket.on("group-membership-changed", handleGroupMembershipChanged);
+    return () => {
+      socket.off("group-membership-changed", handleGroupMembershipChanged);
+    };
+  }, [userData]);
 
   const handleSearchQuerry = (event) => {
     setSearchquerry(event.target.value);
@@ -209,15 +229,15 @@ const SideBar = () => {
                       navigate(
                         `chat/${notif.chat._id}&${
                           notif.chat.isGroupChat === false
-                            ? notif.chat.users[0]._id === userData.data._id
-                              ? notif.chat.users[1].name
-                              : notif.chat.users[0].name
+                            ? notif.chat.users[0].user._id === userData.data._id
+                              ? notif.chat.users[1].user.name
+                              : notif.chat.users[0].user.name
                             : notif.chat.chatName
-                        }&${conversation.isGroupChat}&${
+                        }&${
                           notif.chat.isGroupChat === false
-                            ? notif.chat.users[0]._id === userData.data._id
-                              ? notif.chat.users[1].avatarImage
-                              : notif.chat.users[0].avatarImage
+                            ? notif.chat.users[0].user._id === userData.data._id
+                              ? notif.chat.users[1].user.avatarImage
+                              : notif.chat.users[0].user.avatarImage
                             : notif.chat.avatarImage
                         }`
                       );
@@ -227,9 +247,9 @@ const SideBar = () => {
                       {notif.chat.isGroupChat
                         ? `New Message in ${notif.chat.chatName}`
                         : `New Message from ${
-                            notif.chat.users[0]._id === userData.data._id
-                              ? notif.chat.users[1].name
-                              : notif.chat.users[0].name
+                            notif.chat.users[0].user._id === userData.data._id
+                              ? notif.chat.users[1].user.name
+                              : notif.chat.users[0].user.name
                           }`}
                     </MenuItem>
                   )))}
@@ -263,15 +283,15 @@ const SideBar = () => {
                     navigate(
                       `chat/${conversation._id}&${
                         conversation.isGroupChat === false
-                          ? conversation.users[0]._id === userData.data._id
-                            ? conversation.users[1].name
-                            : conversation.users[0].name
+                          ? conversation.users[0].user._id === userData.data._id
+                            ? conversation.users[1].user.name
+                            : conversation.users[0].user.name
                           : conversation.chatName
                       }&${conversation.isGroupChat}&${
                         conversation.isGroupChat === false
-                          ? conversation.users[0]._id === userData.data._id
-                            ? conversation.users[1].avatarImage
-                            : conversation.users[0].avatarImage
+                          ? conversation.users[0].user._id === userData.data._id
+                            ? conversation.users[1].user.avatarImage
+                            : conversation.users[0].user.avatarImage
                           : conversation.avatarImage
                       }`
                     );
@@ -281,9 +301,9 @@ const SideBar = () => {
                     <img
                       src={`data:image/svg+xml;base64,${
                         conversation.isGroupChat === false
-                          ? conversation.users[0]._id === userData.data._id
-                            ? conversation.users[1].avatarImage
-                            : conversation.users[0].avatarImage
+                          ? conversation.users[0].user._id === userData.data._id
+                            ? conversation.users[1].user.avatarImage
+                            : conversation.users[0].user.avatarImage
                           : conversation.avatarImage
                       }`}
                       alt="user avatar"
@@ -291,9 +311,9 @@ const SideBar = () => {
                   </div>
                   <p className={"con-title " + (lighttheme ? "" : "dark")}>
                     {conversation.isGroupChat === false
-                      ? conversation.users[0]._id === userData.data._id
-                        ? conversation.users[1].name
-                        : conversation.users[0].name
+                      ? conversation.users[0].user._id === userData.data._id
+                        ? conversation.users[1].user.name
+                        : conversation.users[0].user.name
                       : conversation.chatName}
                   </p>
                   <p className="con-lastMessage">
@@ -312,15 +332,15 @@ const SideBar = () => {
                   navigate(
                     `chat/${conversation._id}&${
                       conversation.isGroupChat === false
-                        ? conversation.users[0]._id === userData.data._id
-                          ? conversation.users[1].name
-                          : conversation.users[0].name
+                        ? conversation.users[0].user._id === userData.data._id
+                          ? conversation.users[1].user.name
+                          : conversation.users[0].user.name
                         : conversation.chatName
                     }&${conversation.isGroupChat}&${
                       conversation.isGroupChat === false
-                        ? conversation.users[0]._id === userData.data._id
-                          ? conversation.users[1].avatarImage
-                          : conversation.users[0].avatarImage
+                        ? conversation.users[0].user._id === userData.data._id
+                          ? conversation.users[1].user.avatarImage
+                          : conversation.users[0].user.avatarImage
                         : conversation.avatarImage
                     }`
                   );
@@ -333,9 +353,9 @@ const SideBar = () => {
                   <img
                     src={`data:image/svg+xml;base64,${
                       conversation.isGroupChat === false
-                        ? conversation.users[0]._id === userData.data._id
-                          ? conversation.users[1].avatarImage
-                          : conversation.users[0].avatarImage
+                        ? conversation.users[0].user._id === userData.data._id
+                          ? conversation.users[1].user.avatarImage
+                          : conversation.users[0].user.avatarImage
                         : conversation.avatarImage
                     }`}
                     alt="user avatar"
@@ -343,9 +363,9 @@ const SideBar = () => {
                 </div>
                 <p className={"con-title " + (lighttheme ? "" : "dark")}>
                   {conversation.isGroupChat === false
-                    ? conversation.users[0]._id === userData.data._id
-                      ? conversation.users[1].name
-                      : conversation.users[0].name
+                    ? conversation.users[0].user._id === userData.data._id
+                      ? conversation.users[1].user.name
+                      : conversation.users[0].user.name
                     : conversation.chatName}
                 </p>
                 <p className="con-lastMessage">

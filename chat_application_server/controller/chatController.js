@@ -1,6 +1,7 @@
 const expressAsyncHandler = require("express-async-handler");
 const Chat = require("../models/chat");
 const User = require("../models/user");
+const { emitToUser } = require("../socket");
 
 
 
@@ -15,11 +16,11 @@ exports.accessChat = expressAsyncHandler(async (req, res) => {
   var isChat = await Chat.find({
     isGroupChat: false,
     $and: [
-      { users: { $elemMatch: { $eq: req.user._id } } },
-      { users: { $elemMatch: { $eq: userId } } },
+      { users: { $elemMatch: { user: req.user._id } } },
+      { users: { $elemMatch: { user: userId } } },
     ],
   })
-    .populate("users", "-password")
+    .populate("users.user", "name avatarImage email")
     .populate("latestMessage");
 
   isChat = await User.populate(isChat, {
@@ -35,14 +36,17 @@ exports.accessChat = expressAsyncHandler(async (req, res) => {
     var chatData = {
       chatName: "sender",
       isGroupChat: false,
-      users: [req.user._id, userId],
+      users: [
+        { user: req.user._id, joinedAt: new Date() },
+        { user: userId, joinedAt: new Date() }
+      ],
     };
 
     try {
       const createdChat = await Chat.create(chatData);
       const FullChat = await Chat.findOne({ _id: createdChat._id }).populate(
-        "users",
-        "-password"
+        "users.user",
+        "name avatarImage email"
       );
       res.status(200).json(FullChat);
       
@@ -55,20 +59,18 @@ exports.accessChat = expressAsyncHandler(async (req, res) => {
 
 exports.fetchChats = expressAsyncHandler(async (req, res) => {
   try {
-    console.log("Fetch Chats API : ", req);
-
     if (!req.user || !req.user._id) {
       return res.status(400).json({
         success: false,
         message: "User information is missing or incomplete",
       });
     }
+    // Fetch both group and direct chats
     Chat.find({ 
-      users: { $elemMatch: { $eq: req.user._id } },
-      isGroupChat: { $exists: true },
+      users: { $elemMatch: { user: req.user._id } }
     })
-    .populate("users","-password")
-    .populate("groupAdmin","-password")
+    .populate("users.user", "name avatarImage email")
+    .populate("groupAdmin", "name avatarImage email")
     .populate("latestMessage")
     .sort({updatedAt:-1})
     .then(async(results)=>{
@@ -113,15 +115,15 @@ exports.createGroupChat = expressAsyncHandler(async(req,res)=>{
 
     const groupChat = await Chat.create({
       chatName: name,
-      users : req.user,
+      users : [{ user: req.user, joinedAt: new Date() }],
       isGroupChat : true,
       groupAdmin : req.user,
       avatarImage : avatarImage
     })
 
     const fullGroupChat = await Chat.findOne({_id : groupChat._id})
-    .populate("users","-password")
-    .populate("groupAdmin","-password");
+    .populate("users.user", "name avatarImage email")
+    .populate("groupAdmin", "name avatarImage email");
 
     res.status(200).json(fullGroupChat);
   }catch(error){
@@ -133,7 +135,10 @@ exports.createGroupChat = expressAsyncHandler(async(req,res)=>{
 
 exports.fetchGroup = expressAsyncHandler(async(req,res)=>{
     try{
-      const allGroups = await Chat.where("isGroupChat").equals(true);
+      const allGroups = await Chat.find({ isGroupChat: true })
+        .populate("users.user", "name avatarImage email")
+        .populate("groupAdmin", "name avatarImage email")
+        .populate("pendingRequests", "name avatarImage email");
       res.status(200).send(allGroups);
     }
     catch(error){
@@ -154,7 +159,7 @@ exports.addTogroup = expressAsyncHandler(async(req,res)=>{
     }
 
     const chat = await Chat.findById(chatId);
-    const alreadyPresent = chat.users.includes(userId);
+    const alreadyPresent = chat.users.some(u => String(u.user) === String(userId));
     if(alreadyPresent){
       return res.status(402).json({
         success:false,
@@ -162,9 +167,9 @@ exports.addTogroup = expressAsyncHandler(async(req,res)=>{
       })
     }
 
-    const adduser = await Chat.findByIdAndUpdate(chatId,{$push:{users:userId}},{new:true})
-    .populate("users","-password")
-    .populate("groupAdmin","-password");
+    const adduser = await Chat.findByIdAndUpdate(chatId,{$push:{users: { user: userId, joinedAt: new Date() }}},{new:true})
+    .populate("users.user", "name avatarImage email")
+    .populate("groupAdmin", "name avatarImage email");
 
     if(!adduser){
       res.status(404).json({
@@ -172,6 +177,8 @@ exports.addTogroup = expressAsyncHandler(async(req,res)=>{
         message:"Error while adding user",
       })
     }else{
+      // Emit event to the user who was added
+      emitToUser(userId, 'group-membership-changed', { action: 'added', groupId: chatId });
       res.json(adduser);
     }
 
@@ -190,10 +197,12 @@ exports.leaveGroup = expressAsyncHandler(async(req,res)=>{
           message:"data is insufficient"
         })
       }
-      const removed = await Chat.findByIdAndUpdate(chat_id,{$pull:{users:user_id}},{new:true})
-      .populate("users","-password")
-      .populate("groupAdmin","-password");
+      const removed = await Chat.findByIdAndUpdate(chat_id,{$pull:{users: { user: user_id }}},{new:true})
+      .populate("users.user", "name avatarImage email")
+      .populate("groupAdmin", "name avatarImage email");
       if(removed){
+        // Emit event to the user who left
+        emitToUser(user_id, 'group-membership-changed', { action: 'removed', groupId: chat_id });
         res.status(200).json(removed);
       }else{
         res.status(400).json({
@@ -211,3 +220,85 @@ exports.leaveGroup = expressAsyncHandler(async(req,res)=>{
     }
   }
 )
+
+// --- GROUP JOIN REQUEST MECHANISM ---
+
+// User requests to join a group
+exports.requestJoinGroup = expressAsyncHandler(async (req, res) => {
+  const groupId = req.params.groupId;
+  const userId = req.user._id;
+
+  const group = await Chat.findById(groupId);
+  if (!group) return res.status(404).json({ success: false, message: 'Group not found' });
+
+  if (group.users.some(u => String(u.user) === String(userId))) {
+    return res.status(400).json({ success: false, message: 'Already a member' });
+  }
+  if (group.pendingRequests.includes(userId)) {
+    return res.status(400).json({ success: false, message: 'Request already sent' });
+  }
+
+  group.pendingRequests.push(userId);
+  await group.save();
+  res.status(200).json({ success: true, message: 'Join request sent' });
+});
+
+// Admin fetches pending join requests
+exports.getPendingRequests = expressAsyncHandler(async (req, res) => {
+  const groupId = req.params.groupId;
+  const group = await Chat.findById(groupId).populate('pendingRequests', '-password');
+  if (!group) return res.status(404).json({ success: false, message: 'Group not found' });
+
+  if (String(group.groupAdmin) !== String(req.user._id)) {
+    return res.status(403).json({ success: false, message: 'Only admin can view requests' });
+  }
+
+  res.status(200).json({ success: true, pendingRequests: group.pendingRequests });
+});
+
+// Admin accepts a join request
+exports.acceptJoinRequest = expressAsyncHandler(async (req, res) => {
+  const groupId = req.params.groupId;
+  const userId = req.params.userId;
+  const group = await Chat.findById(groupId);
+  if (!group) return res.status(404).json({ success: false, message: 'Group not found' });
+
+  if (String(group.groupAdmin) !== String(req.user._id)) {
+    return res.status(403).json({ success: false, message: 'Only admin can accept requests' });
+  }
+
+  if (!group.pendingRequests.map(id => String(id)).includes(String(userId))) {
+    return res.status(400).json({ success: false, message: 'No such join request' });
+  }
+
+  group.users.push({ user: userId, joinedAt: new Date() });
+  group.pendingRequests = group.pendingRequests.filter(
+    (id) => String(id) !== String(userId)
+  );
+  await group.save();
+  // Emit event to the user who was added
+  emitToUser(userId, 'group-membership-changed', { action: 'added', groupId });
+  res.status(200).json({ success: true, message: 'User added to group' });
+});
+
+// Admin rejects a join request
+exports.rejectJoinRequest = expressAsyncHandler(async (req, res) => {
+  const groupId = req.params.groupId;
+  const userId = req.params.userId;
+  const group = await Chat.findById(groupId);
+  if (!group) return res.status(404).json({ success: false, message: 'Group not found' });
+
+  if (String(group.groupAdmin) !== String(req.user._id)) {
+    return res.status(403).json({ success: false, message: 'Only admin can reject requests' });
+  }
+
+  if (!group.pendingRequests.includes(userId)) {
+    return res.status(400).json({ success: false, message: 'No such join request' });
+  }
+
+  group.pendingRequests = group.pendingRequests.filter(
+    (id) => String(id) !== String(userId)
+  );
+  await group.save();
+  res.status(200).json({ success: true, message: 'Join request rejected' });
+});

@@ -20,6 +20,8 @@ const Groups = () => {
   console.log(userData);
   const [searchquerry, setSearchquerry] = useState("");
   const [loading, setLoading] = useState(false);
+  const [pendingRequestsMap, setPendingRequestsMap] = useState({});
+  const [adminGroups, setAdminGroups] = useState([]);
 
   if (!userData) {
     console.log("User Not Authenticated");
@@ -44,6 +46,27 @@ const Groups = () => {
         console.log("User refresed in user panel");
         setGroups(data.data);
         setLoading(false);
+        // Find groups where user is admin
+        const adminGroups = data.data.filter(
+          (g) => g.groupAdmin && g.groupAdmin._id === userData.data._id
+        );
+        setAdminGroups(adminGroups);
+        // Fetch pending requests for admin groups
+        adminGroups.forEach((group) => {
+          axios
+            .get(
+              `${process.env.REACT_APP_DEPLOYMENT_URL}/chat/groups/${group._id}/requests`,
+              {
+                headers: { Authorization: `Bearer ${userData.data.token}` },
+              }
+            )
+            .then((res) => {
+              setPendingRequestsMap((prev) => ({
+                ...prev,
+                [group._id]: res.data.pendingRequests,
+              }));
+            });
+        });
       })
       .catch((error) => {
         if (error.response && error.response.status === 402) {
@@ -64,6 +87,61 @@ const Groups = () => {
   const handleSearchQuerry = (event) => {
     setSearchquerry(event.target.value);
     console.log(event.target.value);
+  };
+
+  const handleRequestJoin = (groupId) => {
+    setLoading(true);
+    axios
+      .post(
+        `${process.env.REACT_APP_DEPLOYMENT_URL}/chat/groups/${groupId}/request-join`,
+        {},
+        { headers: { Authorization: `Bearer ${userData.data.token}` } }
+      )
+      .then(() => {
+        setLoading(false);
+        toast.success("Request sent to join group");
+        setRefresh((prev) => !prev);
+      })
+      .catch((err) => {
+        setLoading(false);
+        if (err.response?.data?.message) {
+          toast.error(err.response.data.message);
+        } else {
+          toast.error("Error sending join request");
+        }
+      });
+  };
+
+  const handleAcceptRequest = (groupId, userId) => {
+    axios
+      .post(
+        `${process.env.REACT_APP_DEPLOYMENT_URL}/chat/groups/${groupId}/requests/${userId}/accept`,
+        {},
+        { headers: { Authorization: `Bearer ${userData.data.token}` } }
+      )
+      .then(() => {
+        toast.success("User added to group");
+        setRefresh((prev) => !prev);
+      })
+      .catch(() => {
+        toast.error("Error accepting request");
+      });
+  };
+
+  const handleRejectRequest = (groupId, userId) => {
+    axios
+      .post(
+        `${process.env.REACT_APP_DEPLOYMENT_URL}/chat/groups/${groupId}/requests/${userId}/reject`,
+        {},
+        { headers: { Authorization: `Bearer ${userData.data.token}` } }
+      )
+      .then(() => {
+        toast.info("Request rejected");
+        setRefresh((prev) => !prev);
+      })
+      .catch(() => {
+        toast.error("Error rejecting request");
+      });
   };
 
   return (
@@ -104,55 +182,55 @@ const Groups = () => {
           </div>
         ) : (
           groups.map((user, index) => {
+            const isMember = user.users.some(u => u.user && u.user._id === userData.data._id);
+            const hasRequested = user.pendingRequests?.some(u => u._id === userData.data._id);
             return (
               <div
                 className={"g-list " + (lightTheme ? "" : "dark")}
                 key={index}
-                onClick={() => {
-                  console.log("Creating chat with ", user.chatName);
-                  const config = {
-                    headers: {
-                      Authorization: `Bearer ${userData.data.token}`,
-                    },
-                  };
-                  setLoading(true);
-                  const response = axios
-                    .put(
-                      `${process.env.REACT_APP_DEPLOYMENT_URL}/chat/addUsers`,
-                      {
-                        chatId: user._id,
-                        userId: userData.data._id,
-                      },
-                      config
-                    )
-                    .then(() => {
-                      setLoading(false);
-                      setRefresh((prev) => !prev);
-                    })
-                    .catch((error) => {
-                      if (error.response.status === 402) {
-                        setLoading(false);
-                        toast.error("you are already in the group");
-                      } else {
-                        toast.error("error while adding user to group");
-                      }
-                    });
-                }}
               >
-                <div className={"avatar-box " + (lightTheme ? "" : "dark")}>
+                <div className={"avatar-box " + (lightTheme ? "" : "dark")}> 
                   <img
                     src={`data:image/svg+xml;base64,${user.avatarImage}`}
                     alt="user avatar"
                   />
                 </div>
-                <p className={"con-title " + (lightTheme ? "" : "dark")}>
-                  {user.chatName}
-                </p>
+                <p className={"con-title " + (lightTheme ? "" : "dark")}>{user.chatName}</p>
+                {isMember ? (
+                  <button disabled className="joined-btn">Joined</button>
+                ) : hasRequested ? (
+                  <button disabled className="requested-btn">Request Sent</button>
+                ) : (
+                  <button onClick={() => handleRequestJoin(user._id)} className="join-btn">Request to Join</button>
+                )}
               </div>
             );
           })
           )}
+        </div>
+
+        {/* Admin: Pending Requests Section */}
+        {adminGroups.length > 0 && (
+          <div className="admin-requests-section">
+            <h3>Pending Join Requests (Admin)</h3>
+            {adminGroups.map((group) => (
+              <div key={group._id} className="admin-group-requests">
+                <h4>{group.chatName}</h4>
+                {(pendingRequestsMap[group._id]?.length > 0) ? (
+                  pendingRequestsMap[group._id].map((user) => (
+                    <div key={user._id} className="pending-request-item">
+                      <span>{user.name || user.email || user._id}</span>
+                      <button onClick={() => handleAcceptRequest(group._id, user._id)}>Accept</button>
+                      <button onClick={() => handleRejectRequest(group._id, user._id)}>Reject</button>
+                    </div>
+                  ))
+                ) : (
+                  <span>No pending requests</span>
+                )}
+              </div>
+            ))}
           </div>
+        )}
       </div>
     </>
   );
