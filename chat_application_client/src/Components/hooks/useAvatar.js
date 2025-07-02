@@ -9,25 +9,27 @@ export const useAvatar = () => {
   const [isLoading, setIsLoading] = useState(false);
 
   const fetchAvatar = useCallback(async () => {
-    setError(null);
-    setIsLoading(true);
+  setError(null);
+  setIsLoading(true);
 
-    try {
-      const AVATAR_API = `https://api.multiavatar.com/${genRandomNum()}?apikey=$zOt29xf7paMvys`;
-      const response = await axios.request({
-        method: 'GET',
-        url: AVATAR_API
-      });
-      if (response?.data) {
-        const result = Buffer.from(response.data);
-        return result.toString('base64');
-      }
-    } catch (e) {
-      setError(e?.response?.data || e);
-    } finally {
-      setIsLoading(false);
+  try {
+    const seed = genRandomNum();
+    const AVATAR_API = `https://api.dicebear.com/8.x/bottts/svg?seed=${seed}`;
+    const response = await axios.get(AVATAR_API, {
+      responseType: 'text',
+    });
+
+    if (response?.data) {
+      const result = Buffer.from(response.data);
+      return result.toString('base64');
     }
-  }, []);
+  } catch (e) {
+    setError(e?.response?.data || e);
+  } finally {
+    setIsLoading(false);
+  }
+}, []);
+
 
   return { error, isLoading, fetchAvatar };
 };

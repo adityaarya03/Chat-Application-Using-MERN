@@ -34,9 +34,9 @@ exports.loginController = expressAsyncHandler(async (req, res) => {
   }
 });
 exports.signupController = expressAsyncHandler(async (req, res) => {
-  const { name, email, password, avatarImage , otp, } = req.body;
+  const { name, email, password, avatarImage, otp } = req.body;
   console.log(req.body);
-  if (!name || !email || !password || !otp ) {
+  if (!name || !email || !password || !otp) {
     return res.status(403).send({
       success: false,
       message: "All fields are required",
@@ -59,19 +59,19 @@ exports.signupController = expressAsyncHandler(async (req, res) => {
     });
   }
 
-  const response = await OTP.find({email}).sort({createdAt : -1}).limit(1);
+  const response = await OTP.find({ email }).sort({ createdAt: -1 }).limit(1);
   console.log(response);
 
-  if(response.length===0){
+  if (response.length === 0) {
     return res.status(400).json({
-      success:false,
-      message:"Otp is not present for user,Generate again"
-    })
-  }else if(otp!==response[0].otp){
+      success: false,
+      message: "Otp is not present for user,Generate again",
+    });
+  } else if (otp !== response[0].otp) {
     return res.status(400).json({
-      success:false,
-      message:"The otp is not valid"
-    })
+      success: false,
+      message: "The otp is not valid",
+    });
   }
 
   const user = await User.create({
@@ -111,7 +111,7 @@ exports.fetchAllUsers = expressAsyncHandler(async (req, res) => {
 
 exports.sendOtp = expressAsyncHandler(async (req, res) => {
   const { email } = req.body;
-  if(!email){
+  if (!email) {
     console.log("Email is not present");
   }
   const checkUser = await User.findOne({ email });
@@ -140,11 +140,27 @@ exports.sendOtp = expressAsyncHandler(async (req, res) => {
       specialChars: false,
     });
   }
-  const otpPayload = {email,otp};
+  const otpPayload = { email, otp };
   const otpBody = await OTP.create(otpPayload);
   console.log("OTP Body", otpBody);
   res.status(200).json({
-    success:true,
-    message:"Otp send successfuly"
-  })
+    success: true,
+    message: "Otp send successfuly",
+  });
+});
+
+exports.generateAvatar = expressAsyncHandler(async (req, res) => {
+try {
+    const { default: fetch } = await import("node-fetch");
+    const randomNum = Math.floor(Math.random() * 1000);
+    const avatarUrl = `https://api.multiavatar.com/${randomNum}?apikey=zOt29xf7paMvys`;
+
+    const avatarResponse = await fetch(avatarUrl);
+    const svg = await avatarResponse.text();
+    res.setHeader("Content-Type", "image/svg+xml");
+    res.send(svg);
+  } catch (error) {
+    console.log(error);
+    res.status(500).send("Error generating avatar");
+  }
 });
