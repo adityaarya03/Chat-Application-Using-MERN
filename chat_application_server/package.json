@@ -7,7 +7,7 @@
     "start": "node index.js",
     "dev": "nodemon index.js"
   },
-  "author": "Harsh Garg",
+  "author": "Aditya Arya",
   "license": "ISC",
   "dependencies": {
     "bcrypt": "^5.1.1",

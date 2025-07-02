@@ -29,7 +29,6 @@ const LoginForm = () => {
   const handleSubmit = async()=>{
     setLoading(true);
     try{
-
       const response = await axios.post(
         `${process.env.REACT_APP_DEPLOYMENT_URL}/user/login`,
         formdata
