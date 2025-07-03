@@ -225,31 +225,35 @@ const SideBar = () => {
               {!notification.length
                 ? <MenuItem>No new Message</MenuItem>
                 :(notification.map((notif) => (
-                    <MenuItem key={notif._id} onClick={()=>{
+                    <MenuItem key={notif._id} onClick={() => {
+                      let avatarImage, name;
+                      if (notif.chat.isGroupChat) {
+                        avatarImage = notif.chat.avatarImage;
+                        name = notif.chat.chatName;
+                      } else {
+                        const currentUserId = userData.data._id;
+                        const otherUserObj = notif.chat.users.find(
+                          (u) => u.user && u.user._id !== currentUserId
+                        );
+                        avatarImage = otherUserObj?.user?.avatarImage || "";
+                        name = otherUserObj?.user?.name || "Unknown User";
+                      }
+                      setChatcontext(notif.chat);
                       navigate(
-                        `chat/${notif.chat._id}&${
-                          notif.chat.isGroupChat === false
-                            ? notif.chat.users[0].user._id === userData.data._id
-                              ? notif.chat.users[1].user.name
-                              : notif.chat.users[0].user.name
-                            : notif.chat.chatName
-                        }&${
-                          notif.chat.isGroupChat === false
-                            ? notif.chat.users[0].user._id === userData.data._id
-                              ? notif.chat.users[1].user.avatarImage
-                              : notif.chat.users[0].user.avatarImage
-                            : notif.chat.avatarImage
-                        }`
+                        `chat/${notif.chat._id}&${name}&${notif.chat.isGroupChat}&${avatarImage}`
                       );
-                      setChatcontext(notif.chat)
-                      setNotification(notification.filter((n)=>n!==notif));
+                      setNotification(notification.filter((n) => n !== notif));
                     }}>
                       {notif.chat.isGroupChat
                         ? `New Message in ${notif.chat.chatName}`
                         : `New Message from ${
-                            notif.chat.users[0].user._id === userData.data._id
-                              ? notif.chat.users[1].user.name
-                              : notif.chat.users[0].user.name
+                            (() => {
+                              const currentUserId = userData.data._id;
+                              const otherUserObj = notif.chat.users.find(
+                                (u) => u.user && u.user._id !== currentUserId
+                              );
+                              return otherUserObj?.user?.name || "Unknown User";
+                            })()
                           }`}
                     </MenuItem>
                   )))}
