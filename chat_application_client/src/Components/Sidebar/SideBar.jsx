@@ -21,7 +21,7 @@ import Badge from "@mui/material/Badge";
 import NotificationsActiveIcon from "@mui/icons-material/NotificationsActive";
 import ChatIcon from "@mui/icons-material/Chat";
 import io from "socket.io-client";
-import { GiHamburgerMenu } from "react-icons/gi";
+import MenuIcon from '@mui/icons-material/Menu';
 // import Conversationuser from "../Conversationuser";
 
 const ENDPOINT = process.env.REACT_APP_DEPLOYMENT_URL;
@@ -127,7 +127,7 @@ const SideBar = () => {
     <>
     {!isOpen && 
     <div className="sidebar-burger" onClick={handleToggleSidebar} style={{ color: lighttheme ? "black" : "white" }}>
-      <GiHamburgerMenu />
+      <MenuIcon />
     </div>}
     <div className={"sidebar"}>
       <div className={"sb-header " + (lighttheme ? "" : "darker")}>
@@ -169,7 +169,7 @@ const SideBar = () => {
               className="sidebar-toggle"
               style={{ color: lighttheme ? "black" : "white" }}
             >
-              <GiHamburgerMenu />
+              <MenuIcon />
             </div>
           )
           }
