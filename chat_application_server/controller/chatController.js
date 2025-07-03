@@ -302,3 +302,17 @@ exports.rejectJoinRequest = expressAsyncHandler(async (req, res) => {
   await group.save();
   res.status(200).json({ success: true, message: 'Join request rejected' });
 });
+
+exports.getChatById = expressAsyncHandler(async (req, res) => {
+  try {
+    const chat = await Chat.findById(req.params.id)
+      .populate("users.user", "name avatarImage email")
+      .populate("groupAdmin", "name avatarImage email");
+    if (!chat) {
+      return res.status(404).json({ success: false, message: "Chat not found" });
+    }
+    res.status(200).json(chat);
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+});

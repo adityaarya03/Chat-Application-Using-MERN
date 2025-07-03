@@ -35,8 +35,7 @@ const ChatArea = () => {
   const [messageContent, setMessageContent] = useState("");
   const messagesEndRef = useRef(null);
   const dyParams = useParams();
-  const [chat_id, chat_user, isGroupChat, avatarImage] =
-    dyParams._id.split("&");
+  const chat_id = dyParams._id;
   const userData = JSON.parse(Cookies.get("userData"));
   const [allMessages, setAllMessages] = useState([]);
   const [loaded, setloaded] = useState(false);
@@ -221,16 +220,43 @@ const ChatArea = () => {
     };
   }, [userData, chat_id, navigate]);
 
-  // Determine display name and avatar for direct chats
-  let displayName = chat_user;
-  let displayAvatar = avatarImage;
-  if (chatcontext && isGroupChat === "false" && chatcontext.users) {
-    const other = chatcontext.users.find(
-      (u) => u.user && u.user._id !== userData.data._id
-    );
-    if (other && other.user) {
-      displayName = other.user.name;
-      displayAvatar = other.user.avatarImage;
+  // Fetch chat details if chatcontext is missing or chat_id changes
+  useEffect(() => {
+    if (!chatcontext || chatcontext._id !== chat_id) {
+      const config = {
+        headers: {
+          Authorization: `Bearer ${userData.data.token}`,
+        },
+      };
+      axios
+        .get(`${process.env.REACT_APP_DEPLOYMENT_URL}/chat/${chat_id}`, config)
+        .then((res) => {
+          setChatcontext(res.data);
+        })
+        .catch((err) => {
+          toast.error("Error loading chat details");
+        });
+    }
+  }, [chat_id, chatcontext, setChatcontext, userData.data.token]);
+
+  // Remove splitting of chat_user, isGroupChat, avatarImage from URL
+  // Use chatcontext for all chat details below
+  let displayName = "";
+  let displayAvatar = "";
+  let isGroupChat = "";
+  if (chatcontext) {
+    isGroupChat = chatcontext.isGroupChat ? "true" : "false";
+    if (isGroupChat === "false" && chatcontext.users) {
+      const other = chatcontext.users.find(
+        (u) => u.user && u.user._id !== userData.data._id
+      );
+      if (other && other.user) {
+        displayName = other.user.name;
+        displayAvatar = other.user.avatarImage;
+      }
+    } else {
+      displayName = chatcontext.chatName;
+      displayAvatar = chatcontext.avatarImage;
     }
   }
 
@@ -288,7 +314,7 @@ const ChatArea = () => {
               handleOpen={handleOpen}
               handleClose={handleclose}
               open={open}
-              name={chat_user}
+              name={displayName}
             />
           ) : (
             <div />

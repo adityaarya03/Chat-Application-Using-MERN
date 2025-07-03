@@ -62,17 +62,7 @@ const Conversationuser = () => {
                   }
                   onClick={() => {
                     setChatcontext(conversation);
-                    navigate(
-                      `chat/${conversation._id}&${
-                        conversation.isGroupChat === false
-                          ? otherUser.name
-                          : conversation.chatName
-                      }&${conversation.isGroupChat}&${
-                        conversation.isGroupChat === false
-                          ? otherUser.avatarImage
-                          : conversation.avatarImage
-                      }`
-                    );
+                    navigate(`chat/${conversation._id}`);
                   }}
                 >
                   <div className="avatar-box ">
@@ -102,19 +92,8 @@ const Conversationuser = () => {
                 key={index}
                 className="conversation-container"
                 onClick={() => {
-                  navigate(
-                    `chat/${conversation._id}&${
-                      conversation.isGroupChat === false
-                        ? otherUser.name
-                        : conversation.chatName
-                    }&${conversation.isGroupChat}&${
-                      conversation.isGroupChat === false
-                        ? otherUser.avatarImage
-                        : conversation.avatarImage
-                    }`
-                  );
                   setChatcontext(conversation);
-                  console.log(chatcontext,"hii convo");
+                  navigate(`chat/${conversation._id}`);
                   setNotification(notification.filter((n)=>n._id!==conversation.latestMessage._id));
                 }}
               >

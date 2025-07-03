@@ -226,22 +226,8 @@ const SideBar = () => {
                 ? <MenuItem>No new Message</MenuItem>
                 :(notification.map((notif) => (
                     <MenuItem key={notif._id} onClick={() => {
-                      let avatarImage, name;
-                      if (notif.chat.isGroupChat) {
-                        avatarImage = notif.chat.avatarImage;
-                        name = notif.chat.chatName;
-                      } else {
-                        const currentUserId = userData.data._id;
-                        const otherUserObj = notif.chat.users.find(
-                          (u) => u.user && u.user._id !== currentUserId
-                        );
-                        avatarImage = otherUserObj?.user?.avatarImage || "";
-                        name = otherUserObj?.user?.name || "Unknown User";
-                      }
                       setChatcontext(notif.chat);
-                      navigate(
-                        `chat/${notif.chat._id}&${name}&${notif.chat.isGroupChat}&${avatarImage}`
-                      );
+                      navigate(`chat/${notif.chat._id}`);
                       setNotification(notification.filter((n) => n !== notif));
                     }}>
                       {notif.chat.isGroupChat
@@ -284,21 +270,7 @@ const SideBar = () => {
                   onClick={() => {
                     // selectedChat = conversation._id
                     setChatcontext(conversation);
-                    navigate(
-                      `chat/${conversation._id}&${
-                        conversation.isGroupChat === false
-                          ? conversation.users[0].user._id === userData.data._id
-                            ? conversation.users[1].user.name
-                            : conversation.users[0].user.name
-                          : conversation.chatName
-                      }&${conversation.isGroupChat}&${
-                        conversation.isGroupChat === false
-                          ? conversation.users[0].user._id === userData.data._id
-                            ? conversation.users[1].user.avatarImage
-                            : conversation.users[0].user.avatarImage
-                          : conversation.avatarImage
-                      }`
-                    );
+                    navigate(`chat/${conversation._id}`);
                   }}
                 >
                   <div className="avatar-box ">
@@ -332,24 +304,8 @@ const SideBar = () => {
                 key={index}
                 className="conversation-container"
                 onClick={() => {
-                 
-                  navigate(
-                    `chat/${conversation._id}&${
-                      conversation.isGroupChat === false
-                        ? conversation.users[0].user._id === userData.data._id
-                          ? conversation.users[1].user.name
-                          : conversation.users[0].user.name
-                        : conversation.chatName
-                    }&${conversation.isGroupChat}&${
-                      conversation.isGroupChat === false
-                        ? conversation.users[0].user._id === userData.data._id
-                          ? conversation.users[1].user.avatarImage
-                          : conversation.users[0].user.avatarImage
-                        : conversation.avatarImage
-                    }`
-                  );
                   setChatcontext(conversation);
-                  console.log(chatcontext,"hii convo");
+                  navigate(`chat/${conversation._id}`);
                   setNotification(notification.filter((n)=>n._id!==conversation.latestMessage._id));
                 }}
               >

@@ -1,7 +1,7 @@
 const express = require("express");
 const { protect } = require("../middlewares/auth");
 const { accessChat, fetchChats, createGroupChat, fetchGroup, addTogroup, leaveGroup,
-  requestJoinGroup, getPendingRequests, acceptJoinRequest, rejectJoinRequest } = require("../controller/chatController");
+  requestJoinGroup, getPendingRequests, acceptJoinRequest, rejectJoinRequest, getChatById } = require("../controller/chatController");
 const router = express.Router();
 
 router.post("/",protect,accessChat);
@@ -16,5 +16,7 @@ router.post("/groups/:groupId/request-join", protect, requestJoinGroup);
 router.get("/groups/:groupId/requests", protect, getPendingRequests);
 router.post("/groups/:groupId/requests/:userId/accept", protect, acceptJoinRequest);
 router.post("/groups/:groupId/requests/:userId/reject", protect, rejectJoinRequest);
+
+router.get("/:id", protect, getChatById);
 
 module.exports = router;
