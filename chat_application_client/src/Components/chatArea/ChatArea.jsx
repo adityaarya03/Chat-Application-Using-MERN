@@ -222,6 +222,7 @@ const ChatArea = () => {
 
   // Fetch chat details if chatcontext is missing or chat_id changes
   useEffect(() => {
+    if (!chat_id) return; // Prevent fetching if no chat is selected
     if (!chatcontext || chatcontext._id !== chat_id) {
       const config = {
         headers: {

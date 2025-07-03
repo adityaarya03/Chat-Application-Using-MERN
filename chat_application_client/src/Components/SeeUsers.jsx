@@ -22,22 +22,27 @@ import { useSelector } from "react-redux";
 import { myContext } from "../Components/Main/MainContainer";
 import { toast } from "react-toastify";
 import { useNavigate } from "react-router-dom";
+import "./SeeUsers.css";
 
 const style = {
   position: "absolute",
   top: "50%",
   left: "50%",
   transform: "translate(-50%, -50%)",
-  width: 400,
+  width: "90vw",
+  maxWidth: "500px",
+  maxHeight: "90vh",
+  overflowY: "auto",
   bgcolor: "#C4DFDF",
-  //   border: "2px solid #000",
   borderRadius: "10px",
   boxShadow: 24,
-  p: 4,
+  p: 3,
   display: "flex",
   flexDirection: "column",
   gap: "20px",
+  boxSizing: "border-box",
 };
+
 
 const SeeUsers = ({ handleOpen, handleClose, open, name }) => {
   const navigate = useNavigate();
@@ -262,7 +267,8 @@ const SeeUsers = ({ handleOpen, handleClose, open, name }) => {
                       alignItems: "center",
                     }}
                   >
-                    <Stack direction="row" spacing={1}>
+                    <Stack direction="row" spacing={1} flexWrap="wrap">
+
                       <Chip
                         label={member.name}
                         onDelete={() => {

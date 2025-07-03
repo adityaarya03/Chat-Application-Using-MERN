@@ -1,19 +1,20 @@
 .chatArea-container{
-    margin-left: 10px;
-    margin-top: 10px;
+    /* margin-left: 10px; */
+    /* margin-top: 10px; */
     display: flex;
     flex: 3;
     flex-direction: column;
 }
 
 .chatArea-header{
-    border-top-right-radius: 26px;
-    border-top-left-radius: 26px;
+    /* border-top-right-radius: 26px; */
+    /* border-top-left-radius: 26px; */
     display: flex;
     align-items: center;
     gap: 10px;
     background-color: #E1E1E1;
     padding: 10px 10px;
+    height: 7vh;
 }
 
 .header-text{

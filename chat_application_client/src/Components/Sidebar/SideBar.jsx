@@ -19,8 +19,9 @@ import Menu from "@mui/material/Menu";
 import MenuItem from "@mui/material/MenuItem";
 import Badge from "@mui/material/Badge";
 import NotificationsActiveIcon from "@mui/icons-material/NotificationsActive";
-import ChatIcon from '@mui/icons-material/Chat';
+import ChatIcon from "@mui/icons-material/Chat";
 import io from "socket.io-client";
+import { GiHamburgerMenu } from "react-icons/gi";
 // import Conversationuser from "../Conversationuser";
 
 const ENDPOINT = process.env.REACT_APP_DEPLOYMENT_URL;
@@ -29,12 +30,19 @@ let socket;
 const SideBar = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
-  const { refresh, setRefresh, notification, setNotification, chatcontext , setChatcontext } =
-    useContext(myContext);
+  const {
+    refresh,
+    setRefresh,
+    notification,
+    setNotification,
+    chatcontext,
+    setChatcontext,
+  } = useContext(myContext);
   // const { selectedChat, setSelectedChat } = useContext(myContext);
   const lighttheme = useSelector((state) => state.themeKey);
   const [conversation, setConversation] = useState([]);
   const [searchquerry, setSearchquerry] = useState("");
+  const [isOpen, setIsOpen] = useState(true);
 
   //menu option
   const [anchorEl, setAnchorEl] = React.useState(null);
@@ -69,10 +77,13 @@ const SideBar = () => {
       },
     };
     const response = axios
-      .get(`${process.env.REACT_APP_DEPLOYMENT_URL}/chat?search=${searchquerry}`, config)
+      .get(
+        `${process.env.REACT_APP_DEPLOYMENT_URL}/chat?search=${searchquerry}`,
+        config
+      )
       .then((response) => {
         console.log("Data refresed in sidebar", response.data);
-        console.log("hi i am noti" , notification)
+        console.log("hi i am noti", notification);
         setConversation(response.data);
       });
   }, [refresh, searchquerry]);
@@ -104,7 +115,20 @@ const SideBar = () => {
     navigate("/");
   };
 
+  const handleToggleSidebar = () => {
+    setIsOpen(!isOpen);
+    const sidebar = document.querySelector(".sidebar");
+    if (sidebar) {
+      sidebar.style.display = isOpen ? "none" : "block";
+    }
+  };
+  
   return (
+    <>
+    {!isOpen && 
+    <div className="sidebar-burger" onClick={handleToggleSidebar} style={{ color: lighttheme ? "black" : "white" }}>
+      <GiHamburgerMenu />
+    </div>}
     <div className={"sidebar"}>
       <div className={"sb-header " + (lighttheme ? "" : "darker")}>
         <div
@@ -135,16 +159,23 @@ const SideBar = () => {
               "aria-labelledby": "basic-button",
             }}
           >
+            <MenuItem class="mobile-user">{userData.data.name}</MenuItem>
             <MenuItem onClick={handleClose}>Profile</MenuItem>
             <MenuItem onClick={handleLogout}>Logout</MenuItem>
           </Menu>
-
-          <p
-            className={"pro-text " +( lighttheme ? "" : "darker")}
-            style={{ textTransform: "uppercase" }}
-          >
-            {userData.data.name}
-          </p>
+          {isOpen && (
+            <div
+              onClick={handleToggleSidebar}
+              className="sidebar-toggle"
+              style={{ color: lighttheme ? "black" : "white" }}
+            >
+              <GiHamburgerMenu />
+            </div>
+          )
+          }
+            <p style={{ color: lighttheme ? "black" : "white" }} className="desktop-user">
+              {userData.data.name}
+            </p>
         </div>
         <div className="other-icons">
           <IconButton
@@ -155,10 +186,11 @@ const SideBar = () => {
           >
             <PersonAddIcon className={"icon " + (lighttheme ? "" : "darker")} />
           </IconButton>
-          <IconButton className="iconshadow"  onClick={() => navigate("joinGroup")}>
-            <GroupAddIcon
-              className={"icon " + (lighttheme ? "" : "darker")}
-            />
+          <IconButton
+            className="iconshadow"
+            onClick={() => navigate("joinGroup")}
+          >
+            <GroupAddIcon className={"icon " + (lighttheme ? "" : "darker")} />
           </IconButton>
           <IconButton
             className="iconshadow"
@@ -184,8 +216,12 @@ const SideBar = () => {
               />
             )}
           </IconButton>
-          <IconButton className="chats-icons" sx={{display:"none"}} onClick={()=>navigate("/app/usersChat")}>
-            <ChatIcon/>
+          <IconButton
+            className="chats-icons"
+            sx={{ display: "none" }}
+            onClick={() => navigate("/app/usersChat")}
+          >
+            <ChatIcon />
           </IconButton>
         </div>
       </div>
@@ -222,27 +258,30 @@ const SideBar = () => {
             }}
           >
             <MenuList onClick={handleClosenoti}>
-              {!notification.length
-                ? <MenuItem>No new Message</MenuItem>
-                :(notification.map((notif) => (
-                    <MenuItem key={notif._id} onClick={() => {
+              {!notification.length ? (
+                <MenuItem>No new Message</MenuItem>
+              ) : (
+                notification.map((notif) => (
+                  <MenuItem
+                    key={notif._id}
+                    onClick={() => {
                       setChatcontext(notif.chat);
                       navigate(`chat/${notif.chat._id}`);
                       setNotification(notification.filter((n) => n !== notif));
-                    }}>
-                      {notif.chat.isGroupChat
-                        ? `New Message in ${notif.chat.chatName}`
-                        : `New Message from ${
-                            (() => {
-                              const currentUserId = userData.data._id;
-                              const otherUserObj = notif.chat.users.find(
-                                (u) => u.user && u.user._id !== currentUserId
-                              );
-                              return otherUserObj?.user?.name || "Unknown User";
-                            })()
-                          }`}
-                    </MenuItem>
-                  )))}
+                    }}
+                  >
+                    {notif.chat.isGroupChat
+                      ? `New Message in ${notif.chat.chatName}`
+                      : `New Message from ${(() => {
+                          const currentUserId = userData.data._id;
+                          const otherUserObj = notif.chat.users.find(
+                            (u) => u.user && u.user._id !== currentUserId
+                          );
+                          return otherUserObj?.user?.name || "Unknown User";
+                        })()}`}
+                  </MenuItem>
+                ))
+              )}
             </MenuList>
           </Menu>
         </div>
@@ -250,7 +289,10 @@ const SideBar = () => {
       {/* <Conversationuser/> */}
       <div className={"sb-conversation " + (lighttheme ? "" : "dark")}>
         {conversation.map((conversation, index) => {
-          if (conversation.users.length === 1 && conversation.isGroupChat===false) {
+          if (
+            conversation.users.length === 1 &&
+            conversation.isGroupChat === false
+          ) {
             return <div key={index}></div>;
           }
           if (conversation.latestMessage === undefined) {
@@ -306,7 +348,11 @@ const SideBar = () => {
                 onClick={() => {
                   setChatcontext(conversation);
                   navigate(`chat/${conversation._id}`);
-                  setNotification(notification.filter((n)=>n._id!==conversation.latestMessage._id));
+                  setNotification(
+                    notification.filter(
+                      (n) => n._id !== conversation.latestMessage._id
+                    )
+                  );
                 }}
               >
                 <div className="avatar-box">
@@ -337,7 +383,9 @@ const SideBar = () => {
         })}
       </div>
     </div>
+    </>
   );
+
 };
 
 export default SideBar;

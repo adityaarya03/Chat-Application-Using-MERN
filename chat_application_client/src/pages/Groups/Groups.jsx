@@ -9,7 +9,7 @@ import axios from "axios";
 import { myContext } from "../../Components/Main/MainContainer";
 import { useDispatch, useSelector } from "react-redux";
 import { toast } from "react-toastify";
-import { Backdrop, CircularProgress } from "@mui/material";
+import { Backdrop, CircularProgress, Dialog, DialogTitle, DialogContent, DialogActions, Button } from "@mui/material";
 
 const Groups = () => {
   const [groups, setGroups] = useState([]);
@@ -22,6 +22,8 @@ const Groups = () => {
   const [loading, setLoading] = useState(false);
   const [pendingRequestsMap, setPendingRequestsMap] = useState({});
   const [adminGroups, setAdminGroups] = useState([]);
+  const [modalOpen, setModalOpen] = useState(false);
+  const [modalGroup, setModalGroup] = useState(null);
 
   if (!userData) {
     console.log("User Not Authenticated");
@@ -144,6 +146,15 @@ const Groups = () => {
       });
   };
 
+  const openPendingModal = (group) => {
+    setModalGroup(group);
+    setModalOpen(true);
+  };
+  const closePendingModal = () => {
+    setModalOpen(false);
+    setModalGroup(null);
+  };
+
   return (
     <>
       <div className={"groups-container " + (lightTheme ? "" : "dark")}>
@@ -184,6 +195,7 @@ const Groups = () => {
           groups.map((user, index) => {
             const isMember = user.users.some(u => u.user && u.user._id === userData.data._id);
             const hasRequested = user.pendingRequests?.some(u => u._id === userData.data._id);
+            const isAdmin = user.groupAdmin && user.groupAdmin._id === userData.data._id;
             return (
               <div
                 className={"g-list " + (lightTheme ? "" : "dark")}
@@ -203,34 +215,46 @@ const Groups = () => {
                 ) : (
                   <button onClick={() => handleRequestJoin(user._id)} className="join-btn">Request to Join</button>
                 )}
+                {isAdmin && (
+                  <button
+                    className="pending-requests-btn"
+                    onClick={() => openPendingModal(user)}
+                    style={{ marginLeft: 8 }}
+                  >
+                    Pending Requests
+                  </button>
+                )}
               </div>
             );
           })
           )}
         </div>
 
-        {/* Admin: Pending Requests Section */}
-        {adminGroups.length > 0 && (
-          <div className="admin-requests-section">
-            <h3>Pending Join Requests (Admin)</h3>
-            {adminGroups.map((group) => (
-              <div key={group._id} className="admin-group-requests">
-                <h4>{group.chatName}</h4>
-                {(pendingRequestsMap[group._id]?.length > 0) ? (
-                  pendingRequestsMap[group._id].map((user) => (
-                    <div key={user._id} className="pending-request-item">
-                      <span>{user.name || user.email || user._id}</span>
-                      <button onClick={() => handleAcceptRequest(group._id, user._id)}>Accept</button>
-                      <button onClick={() => handleRejectRequest(group._id, user._id)}>Reject</button>
-                    </div>
-                  ))
-                ) : (
-                  <span>No pending requests</span>
-                )}
-              </div>
-            ))}
-          </div>
-        )}
+        {/* Modal for pending requests */}
+        <Dialog open={modalOpen} onClose={closePendingModal} fullWidth maxWidth="xs" PaperProps={{
+          style: { background: lightTheme ? '#fff' : '#2E4F4F', color: lightTheme ? '#222' : '#fff', borderRadius: 16 }
+        }}>
+          <DialogTitle style={{ borderBottom: lightTheme ? '1px solid #eee' : '1px solid #455A64' }}>
+            Pending Requests for {modalGroup?.chatName}
+          </DialogTitle>
+          <DialogContent dividers style={{ maxHeight: 350, overflowY: 'auto' }}>
+            {(pendingRequestsMap[modalGroup?._id]?.length > 0) ? (
+              pendingRequestsMap[modalGroup._id].map((user) => (
+                <div key={user._id} className={"pending-request-item " + (lightTheme ? "" : "dark")}
+                  style={{ marginBottom: 8 }}>
+                  <span>{user.name || user.email || user._id}</span>
+                  <button onClick={() => handleAcceptRequest(modalGroup._id, user._id)}>Accept</button>
+                  <button onClick={() => handleRejectRequest(modalGroup._id, user._id)}>Reject</button>
+                </div>
+              ))
+            ) : (
+              <span>No pending requests</span>
+            )}
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={closePendingModal} color="primary" autoFocus>Close</Button>
+          </DialogActions>
+        </Dialog>
       </div>
     </>
   );
